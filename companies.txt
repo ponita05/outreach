@@ -55,3 +55,126 @@ Helios Towers,https://www.heliostowers.com
 Downer Group,https://www.downergroup.com
 Telstra Infrastructure,https://www.telstra.com.au
 Radius Global Infrastructure,https://www.radiusglobal.com
+AT&T,https://www.att.com
+Verizon,https://www.verizon.com
+T-Mobile,https://www.t-mobile.com
+Comcast,https://corporate.comcast.com
+Charter Communications,https://corporate.charter.com
+Cox Communications,https://www.cox.com
+Altice USA,https://www.alticeusa.com
+Frontier Communications,https://www.frontier.com
+Windstream,https://www.windstream.com
+Brightspeed,https://www.brightspeed.com
+Consolidated Communications,https://www.consolidated.com
+WideOpenWest (WOW!),https://www.wowway.com
+UScellular,https://www.uscellular.com
+DISH Wireless,https://www.dish.com
+Liberty Latin America,https://www.libertylatinamerica.com
+Vodafone,https://www.vodafone.com
+Orange,https://www.orange.com
+Telefonica,https://www.telefonica.com
+BT Group,https://www.bt.com
+Deutsche Telekom,https://www.telekom.com
+SK Telecom,https://www.sktelecom.com
+NTT DOCOMO,https://www.docomo.ne.jp
+Rakuten Mobile,https://corp.mobile.rakuten.co.jp
+Nippon Telegraph and Telephone (NTT),https://group.ntt
+Singtel,https://www.singtel.com
+Telus,https://www.telus.com
+Rogers Communications,https://www.rogers.com
+Bell Canada,https://www.bce.ca
+Vodacom,https://www.vodacom.com
+MTN Group,https://www.mtn.com
+ZTE,https://www.zte.com.cn/global
+NEC Corporation,https://www.nec.com
+Juniper Networks,https://www.juniper.net
+Arista Networks,https://www.arista.com
+Cisco Systems,https://www.cisco.com
+Extreme Networks,https://www.extremenetworks.com
+Adtran,https://www.adtran.com
+Infinera,https://www.infinera.com
+Cisco Meraki,https://meraki.cisco.com
+TE Connectivity,https://www.te.com
+Amphenol,https://www.amphenol.com
+Belden,https://www.belden.com
+Prysmian Group,https://www.prysmiangroup.com
+Nexans,https://www.nexans.com
+Legrand,https://www.legrand.com
+Panduit,https://www.panduit.com
+Anixter International,https://www.anixter.com
+W.W. Grainger,https://www.grainger.com
+Fastenal,https://www.fastenal.com
+MSC Industrial Supply,https://www.mscdirect.com
+Applied Industrial Technologies,https://www.applied.com
+Motion Industries,https://www.motion.com
+Rexel,https://www.rexel.com
+Sonepar,https://www.sonepar.com
+Ferguson,https://www.ferguson.com
+Wolseley,https://www.wolseley.co.uk
+UPS,https://www.ups.com
+FedEx,https://www.fedex.com
+DHL,https://www.dhl.com
+Maersk,https://www.maersk.com
+C.H. Robinson,https://www.chrobinson.com
+XPO,https://www.xpo.com
+GXO Logistics,https://www.gxo.com
+Ryder System,https://www.ryder.com
+Penske Logistics,https://www.penske.com
+J.B. Hunt Transport Services,https://www.jbhunt.com
+Schneider National,https://www.schneider.com
+Werner Enterprises,https://www.werner.com
+Knight-Swift Transportation,https://www.knight-swift.com
+Old Dominion Freight Line,https://www.odfl.com
+Saia,https://www.saia.com
+Estes Express Lines,https://www.estes-express.com
+ArcBest,https://arcb.com
+Landstar System,https://www.landstar.com
+Hub Group,https://www.hubgroup.com
+Expeditors,https://www.expeditors.com
+Kuehne+Nagel,https://home.kuehne-nagel.com
+DSV,https://www.dsv.com
+DB Schenker,https://www.dbschenker.com
+CEVA Logistics,https://www.cevalogistics.com
+GEODIS,https://www.geodis.com
+Nippon Express,https://www.nipponexpress.com
+Rhenus Logistics,https://www.rhenus.group
+Lineage Logistics,https://www.onelineage.com
+Americold,https://www.americold.com
+Prologis,https://www.prologis.com
+Kenco Group,https://www.kencogroup.com
+Saddle Creek Logistics Services,https://www.sclogistics.com
+McLane Company,https://www.mclaneco.com
+Sysco,https://www.sysco.com
+US Foods,https://www.usfoods.com
+Performance Food Group,https://www.pfgc.com
+Core-Mark,https://www.core-mark.com
+UNFI,https://www.unfi.com
+Dollar General,https://www.dollargeneral.com
+Dollar Tree,https://www.dollartree.com
+Walmart,https://corporate.walmart.com
+Target,https://corporate.target.com
+Costco,https://www.costco.com
+The Home Depot,https://corporate.homedepot.com
+Lowe's,https://corporate.lowes.com
+Best Buy,https://corporate.bestbuy.com
+Amazon,https://www.amazon.com
+eBay,https://www.ebayinc.com
+Wayfair,https://www.wayfair.com
+Coupang,https://www.coupang.com
+Shopify,https://www.shopify.com
+Equinix,https://www.equinix.com
+Digital Realty,https://www.digitalrealty.com
+QTS Realty Trust,https://www.qtsdatacenters.com
+CyrusOne,https://www.cyrusone.com
+CoreSite,https://www.coresite.com
+Iron Mountain Data Centers,https://www.ironmountain.com/data-centers
+American Electric Power,https://www.aep.com
+Duke Energy,https://www.duke-energy.com
+NextEra Energy,https://www.nexteraenergy.com
+Southern Company,https://www.southerncompany.com
+Dominion Energy,https://www.dominionenergy.com
+Exelon,https://www.exeloncorp.com
+PG&E,https://www.pge.com
+Con Edison,https://www.coned.com
+National Grid,https://www.nationalgrid.com
+Eversource Energy,https://www.eversource.com

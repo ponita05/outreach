@@ -13,34 +13,106 @@ Contact prospecting script for Atrope using the TinyFish Agent API (`/run-sse`) 
 ## Files
 
 - `prospect_contacts.py` - main script
-- `companies.txt` - sample input file
-- `.env.example` - required environment variable template
+- `companies.txt` - input companies (editable)
+- `.env.example` - environment variable template
+- `contacts.csv` - output file (created/appended by script)
 
-## Setup
+## Requirements
 
-1. Create and activate a virtual environment (optional but recommended)
-2. Install dependencies:
+- Python 3.10+
+- A TinyFish API key
+
+## Run on any laptop (Mac, Linux, Windows)
+
+### 1) Open a terminal in the `outreach` folder
+
+If you already have the repo locally:
+
+```bash
+cd /path/to/atrope-outreach/outreach
+```
+
+If you need to clone first:
+
+```bash
+git clone <your-repo-url>
+cd atrope-outreach/outreach
+```
+
+### 2) (Recommended) create and activate a virtual environment
+
+Mac/Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Windows (PowerShell):
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 3) Install dependencies
+
+Mac/Linux:
 
 ```bash
 python3 -m pip install requests python-dotenv
 ```
 
-3. Create your `.env` file from the example and set your key:
+Windows:
+
+```powershell
+py -m pip install requests python-dotenv
+```
+
+### 4) Configure your API key
+
+Create `.env` from template:
+
+Mac/Linux:
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` and set:
+Windows (PowerShell):
+
+```powershell
+copy .env.example .env
+```
+
+Edit `.env` and set:
 
 ```env
 TINYFISH_API_KEY=your_real_tinyfish_key
 ```
 
-## Run
+### 5) Edit `companies.txt`
+
+Format is one company per line, comma-separated:
+
+```txt
+Company Name,https://company-website.com
+```
+
+Use real company sites (not placeholder domains like `example.com`) to get real contacts.
+
+### 6) Run the script
+
+Mac/Linux:
 
 ```bash
 python3 prospect_contacts.py
+```
+
+Windows:
+
+```powershell
+py prospect_contacts.py
 ```
 
 Optional flags:
@@ -63,3 +135,9 @@ The script writes `contacts.csv` with exactly these headers:
 - `Email`
 - `Phone`
 - `Source Notes`
+
+## Troubleshooting
+
+- `can't open file ... prospect_contacts.py`: you are in the wrong folder; `cd` into `.../outreach` first.
+- `401 Unauthorized`: API key issue; confirm `.env` is in `outreach/` and `TINYFISH_API_KEY` is valid.
+- `No matching contacts found`: usually means no relevant public contacts found for that website, or the site is a placeholder.

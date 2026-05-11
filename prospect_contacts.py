@@ -34,6 +34,52 @@ CSV_COLUMNS = [
     "Source Notes",
 ]
 
+PASS_DEFINITIONS: List[Tuple[str, str]] = [
+    (
+        "Procurement",
+        "Find up to 30 people at [company] in procurement, purchasing, sourcing, or vendor management roles. "
+        "Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "Operations",
+        "Find up to 30 people at [company] in operations, COO, VP operations, director of operations, or "
+        "operational management roles. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "Supply Chain",
+        "Find up to 30 people at [company] in supply chain, inventory management, logistics, warehouse, or "
+        "materials management roles. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "LinkedIn",
+        "Search LinkedIn for people who currently work at [company] in procurement, operations, supply chain, "
+        "or inventory roles. Find up to 30 people with their LinkedIn profile URLs, titles, and names.",
+    ),
+]
+
+EXTRA_PASS_DEFINITIONS: List[Tuple[str, str]] = [
+    (
+        "Director-Level",
+        "Find up to 30 people at [company] who are directors, senior directors, or heads of procurement, "
+        "operations, logistics, inventory, or supply chain. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "VP-Level",
+        "Find up to 30 people at [company] who are VP, SVP, or executive leaders in procurement, operations, "
+        "sourcing, supply chain, or logistics. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "Logistics-Warehouse",
+        "Find up to 30 people at [company] in warehouse operations, fulfillment, transportation, distribution, "
+        "or logistics management roles. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+    (
+        "Planning-Inventory",
+        "Find up to 30 people at [company] in planning, demand planning, inventory control, materials planning, "
+        "or replenishment roles. Find their name, title, LinkedIn URL, email, and phone.",
+    ),
+]
+
 
 def load_companies(companies_path: Path) -> List[Tuple[str, str]]:
     companies: List[Tuple[str, str]] = []
@@ -81,17 +127,15 @@ def get_next_contact_number(csv_path: Path) -> int:
     return highest + 1
 
 
-def build_goal(company_name: str, website: str) -> str:
+def build_goal(company_name: str, website: str, pass_goal_template: str) -> str:
+    pass_goal = pass_goal_template.replace("[company]", company_name)
     return (
-        "Find real people at this company for B2B outreach. "
         f"Target company: {company_name}. Website: {website}. "
-        "Browse the company website and LinkedIn presence/pages/profiles, then identify people in roles related to "
-        "procurement, operations, inventory management, supply chain, or logistics. "
-        "Return only contacts that are likely relevant to those functions. "
-        "If a field is unknown, leave it as an empty string. "
-        "Prefer accurate LinkedIn profile URLs and business emails if publicly available. "
+        f"{pass_goal} "
+        "Browse the company website and LinkedIn presence/pages/profiles where needed. "
         "Return the output as JSON with a top-level key 'contacts' containing an array of objects with these exact keys: "
-        "Contact Name, Contact Role / Title, Company / Organization, Company Size, LinkedIn URL, Email, Phone, Source Notes."
+        "Contact Name, Contact Role / Title, Company / Organization, Company Size, LinkedIn URL, Email, Phone, Source Notes. "
+        "If a field is unknown, leave it as an empty string."
     )
 
 
@@ -104,11 +148,11 @@ def normalize_url(website: str) -> str:
     return f"https://{value}"
 
 
-def build_payload(company_name: str, website: str) -> Dict[str, Any]:
+def build_payload(company_name: str, website: str, pass_goal_template: str) -> Dict[str, Any]:
     normalized_website = normalize_url(website)
     return {
         "url": normalized_website,
-        "goal": build_goal(company_name, website),
+        "goal": build_goal(company_name, normalized_website, pass_goal_template),
         "metadata": {
             "project": "atrope-outreach",
             "company": company_name,
@@ -237,25 +281,61 @@ def parse_contacts_from_json(obj: Any, company_name: str) -> List[Dict[str, str]
     return contacts
 
 
+def contact_dedupe_key(contact: Dict[str, str]) -> Tuple[str, str, str]:
+    return (
+        contact.get("Contact Name", "").strip().lower(),
+        contact.get("Company / Organization", "").strip().lower(),
+        contact.get("LinkedIn URL", "").strip().lower(),
+    )
+
+
+def contact_filled_field_count(contact: Dict[str, str]) -> int:
+    fields = [
+        "Contact Name",
+        "Contact Role / Title",
+        "Company / Organization",
+        "Company Size",
+        "LinkedIn URL",
+        "Email",
+        "Phone",
+        "Source Notes",
+    ]
+    return sum(1 for field in fields if str(contact.get(field, "")).strip())
+
+
 def dedupe_contacts(contacts: Iterable[Dict[str, str]]) -> List[Dict[str, str]]:
-    seen = set()
-    deduped: List[Dict[str, str]] = []
+    best_by_key: Dict[Tuple[str, str, str], Dict[str, str]] = {}
     for contact in contacts:
-        key = (
-            contact.get("Contact Name", "").lower(),
-            contact.get("Contact Role / Title", "").lower(),
-            contact.get("Company / Organization", "").lower(),
-            contact.get("LinkedIn URL", "").lower(),
-            contact.get("Email", "").lower(),
-        )
-        if key in seen:
+        key = contact_dedupe_key(contact)
+        existing = best_by_key.get(key)
+        if existing is None:
+            best_by_key[key] = contact
             continue
-        seen.add(key)
-        deduped.append(contact)
-    return deduped
+
+        if contact_filled_field_count(contact) > contact_filled_field_count(existing):
+            best_by_key[key] = contact
+
+    return list(best_by_key.values())
 
 
-def log_tinyfish_event(parsed: Dict[str, Any]) -> None:
+def load_existing_contact_keys(csv_path: Path) -> set[Tuple[str, str, str]]:
+    keys: set[Tuple[str, str, str]] = set()
+    if not csv_path.exists() or csv_path.stat().st_size == 0:
+        return keys
+
+    with csv_path.open("r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            normalized = {
+                "Contact Name": str(row.get("Contact Name", "") or "").strip(),
+                "Company / Organization": str(row.get("Company / Organization", "") or "").strip(),
+                "LinkedIn URL": str(row.get("LinkedIn URL", "") or "").strip(),
+            }
+            keys.add(contact_dedupe_key(normalized))
+    return keys
+
+
+def log_tinyfish_event(parsed: Dict[str, Any]) -> bool:
     event_type = str(parsed.get("type", "")).upper()
 
     if event_type == "STARTED":
@@ -264,19 +344,19 @@ def log_tinyfish_event(parsed: Dict[str, Any]) -> None:
             print(f"  [TinyFish] Run started: {run_id}")
         else:
             print("  [TinyFish] Run started")
-        return
+        return False
 
     if event_type == "STREAMING_URL":
         url = str(parsed.get("streaming_url", "")).strip()
         if url:
             print(f"  [TinyFish] Streaming URL: {url}")
-        return
+        return False
 
     if event_type == "PROGRESS":
         purpose = str(parsed.get("purpose", "")).strip()
         if purpose:
             print(f"  [TinyFish:progress] {purpose}")
-        return
+        return False
 
     if event_type == "COMPLETE":
         status = str(parsed.get("status", "")).strip()
@@ -298,7 +378,7 @@ def log_tinyfish_event(parsed: Dict[str, Any]) -> None:
                 print(f"  [TinyFish] Outcome: {outcome}")
             if reason:
                 print(f"  [TinyFish] Reason: {reason[:320]}")
-        return
+        return True
 
     if event_type == "ERROR":
         err = str(parsed.get("error", "") or parsed.get("message", "")).strip()
@@ -306,10 +386,12 @@ def log_tinyfish_event(parsed: Dict[str, Any]) -> None:
             print(f"  [TinyFish:error] {err}")
         else:
             print("  [TinyFish:error] Unknown error event")
-        return
+        return False
 
     if event_type == "HEARTBEAT":
-        return
+        return False
+
+    return False
 
 
 def mask_api_key(api_key: str) -> str:
@@ -325,9 +407,10 @@ def run_tinyfish_for_company(
     api_key: str,
     company_name: str,
     website: str,
+    pass_goal_template: str,
     timeout_seconds: int,
 ) -> List[Dict[str, str]]:
-    payload = build_payload(company_name, website)
+    payload = build_payload(company_name, website, pass_goal_template)
 
     auth_attempts: List[Tuple[str, Dict[str, str]]] = [
         (
@@ -374,6 +457,7 @@ def run_tinyfish_for_company(
                 response.raise_for_status()
 
                 print(f"  [TinyFish] Connected (HTTP {response.status_code}), streaming events...")
+                is_complete = False
                 for raw_line in response.iter_lines(decode_unicode=True):
                     if raw_line is None:
                         continue
@@ -402,7 +486,8 @@ def run_tinyfish_for_company(
                         parsed = json.loads(data)
                         collected_json_objects.append(parsed)
                         if isinstance(parsed, dict):
-                            log_tinyfish_event(parsed)
+                            if log_tinyfish_event(parsed):
+                                is_complete = True
 
                         for text in _extract_text_payload(parsed):
                             text_clean = text.strip()
@@ -412,6 +497,10 @@ def run_tinyfish_for_company(
                     except json.JSONDecodeError:
                         collected_text_fragments.append(data)
                         print(f"  [TinyFish] {data[:220]}")
+
+                    if is_complete:
+                        print("  [TinyFish] Complete event received, closing stream.")
+                        break
 
             contacts: List[Dict[str, str]] = []
             for obj in collected_json_objects:
@@ -495,6 +584,12 @@ def parse_args() -> argparse.Namespace:
         default=180,
         help="HTTP timeout per request in seconds (default: 180)",
     )
+    parser.add_argument(
+        "--target-new-contacts",
+        type=int,
+        default=0,
+        help="Stop early after appending this many new contacts (default: 0 = process all companies)",
+    )
     return parser.parse_args()
 
 
@@ -523,31 +618,83 @@ def main() -> int:
 
     ensure_csv(output_csv_path)
     next_contact_number = get_next_contact_number(output_csv_path)
+    existing_contact_keys = load_existing_contact_keys(output_csv_path)
 
     print(f"Starting prospecting for {len(companies)} compan{'y' if len(companies) == 1 else 'ies'}")
     print(f"Input: {companies_path}")
     print(f"Output: {output_csv_path}")
 
     total_contacts = 0
+    target_new_contacts = max(0, args.target_new_contacts)
+    pass_definitions = PASS_DEFINITIONS + EXTRA_PASS_DEFINITIONS if target_new_contacts > 0 else PASS_DEFINITIONS
+
+    if target_new_contacts > 0:
+        print(
+            f"Target mode enabled: stop after {target_new_contacts} new contacts. "
+            f"Using {len(pass_definitions)} passes per company."
+        )
 
     for index, (company_name, website) in enumerate(companies, start=1):
+        if target_new_contacts > 0 and total_contacts >= target_new_contacts:
+            print("\n" + "=" * 70)
+            print(f"Target reached ({total_contacts}/{target_new_contacts}). Stopping early.")
+            break
+
         print("\n" + "=" * 70)
         print(f"[{index}/{len(companies)}] Processing {company_name} ({website})")
         try:
-            contacts = run_tinyfish_for_company(
-                api_key=api_key,
-                company_name=company_name,
-                website=website,
-                timeout_seconds=args.timeout_seconds,
+            company_contacts: List[Dict[str, str]] = []
+            for pass_index, (pass_name, pass_goal_template) in enumerate(pass_definitions, start=1):
+                pass_contacts: List[Dict[str, str]] = []
+                try:
+                    pass_contacts = run_tinyfish_for_company(
+                        api_key=api_key,
+                        company_name=company_name,
+                        website=website,
+                        pass_goal_template=pass_goal_template,
+                        timeout_seconds=args.timeout_seconds,
+                    )
+                except requests.HTTPError as exc:
+                    body_preview = ""
+                    if exc.response is not None and exc.response.text:
+                        body_preview = f" | Response: {exc.response.text[:300]}"
+                    print(
+                        f"  [ERROR] HTTP error for {company_name} pass {pass_name}: {exc}{body_preview}",
+                        file=sys.stderr,
+                    )
+                except requests.RequestException as exc:
+                    print(f"  [ERROR] Request error for {company_name} pass {pass_name}: {exc}", file=sys.stderr)
+                except Exception as exc:
+                    print(f"  [ERROR] Unexpected error for {company_name} pass {pass_name}: {exc}", file=sys.stderr)
+
+                company_contacts.extend(pass_contacts)
+                print(
+                    f"[{company_name}] Pass {pass_index}/{len(pass_definitions)} ({pass_name})... "
+                    f"found {len(pass_contacts)}"
+                )
+
+            deduped_company_contacts = dedupe_contacts(company_contacts)
+            new_contacts: List[Dict[str, str]] = []
+            for contact in deduped_company_contacts:
+                if contact_dedupe_key(contact) in existing_contact_keys:
+                    continue
+                new_contacts.append(contact)
+
+            print(
+                f"[{company_name}] After dedup: {len(new_contacts)} new contacts. Appending to CSV."
             )
 
-            if contacts:
-                print(f"  [OK] Found {len(contacts)} contact(s). Appending to CSV...")
-                next_contact_number = append_contacts(output_csv_path, contacts, next_contact_number)
-                total_contacts += len(contacts)
-                print(f"  [OK] Appended {len(contacts)} row(s) to {output_csv_path}")
+            if new_contacts:
+                next_contact_number = append_contacts(output_csv_path, new_contacts, next_contact_number)
+                total_contacts += len(new_contacts)
+                for contact in new_contacts:
+                    existing_contact_keys.add(contact_dedupe_key(contact))
+                print(f"  [OK] Appended {len(new_contacts)} row(s) to {output_csv_path}")
+
+                if target_new_contacts > 0 and total_contacts >= target_new_contacts:
+                    print(f"  [OK] Target reached during this company ({total_contacts}/{target_new_contacts}).")
             else:
-                print("  [INFO] No matching contacts found for this company.")
+                print("  [INFO] No new contacts to append for this company.")
 
         except requests.HTTPError as exc:
             body_preview = ""
@@ -565,6 +712,11 @@ def main() -> int:
 
     print("\n" + "=" * 70)
     print(f"Done. Total contacts appended this run: {total_contacts}")
+    if target_new_contacts > 0 and total_contacts < target_new_contacts:
+        print(
+            f"Target not reached: appended {total_contacts}/{target_new_contacts} new contacts. "
+            "Add more companies or run again later."
+        )
     print(f"CSV file: {output_csv_path.resolve()}")
 
     return 0
